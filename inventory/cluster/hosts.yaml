@@ -1,16 +1,8 @@
 server:
-  hosts:
-    apollo:
-    boreas:
-    cerus:
+  hosts: k3s-control-plane-node-1
 
 agent:
-  hosts:
-    chaos:
-    crios:
-    helios:
-    hermes:
-    hypnos:
+  hosts: k3s-node-1
 
 cluster:
   children:

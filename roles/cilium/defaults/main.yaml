@@ -113,7 +113,7 @@ cilium_vars:
       tls:
         auto:
           # -- Available options are `certmanager` and `helm`
-          method: certmanager
+          method: helm
     ingress_controller:
       loadbalancer:
         # -- Available options are `dedicated` and `shared`

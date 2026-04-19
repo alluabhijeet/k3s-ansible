@@ -1,7 +1,7 @@
 ---
 - name: Playbook Validation
   hosts: localhost
-  become: false
+  become: true
   gather_facts: false
   tags: always
   tasks:
@@ -15,7 +15,7 @@
           {% endif %}
             - valid tags: {{ global_map.tags.play | join(', ') }}
       when:
-        - ansible_run_tags not in [(), ('all',)]
+        - ansible_run_tags not in [[], ['all'], (), ('all',)]
         - ansible_run_tags | difference(global_map.tags.play) | length > 0
 
     - name: Validate version
@@ -53,8 +53,6 @@
     - k3s
   serial:
     - 1
-    - 2
-    - 5
   tags: kubernetes
 
 - name: Charts Provisioning
@@ -67,26 +65,24 @@
         name: '{{ postinstall }}'
         tasks_from: postinstall
       loop:
-        - argo-cd
-        - cert-manager
         - cilium
         - coredns
-        - external-dns
-        - kured
-        - longhorn
-        - metrics-server
-        - victoria-logs
       loop_control:
         loop_var: postinstall
   roles:
     - cilium
     - coredns
-    - cert-manager
-    - external-dns
-    - argo-cd
-    - kured
-    - longhorn
-    - metrics-server
-    - victoria-logs
-    - victoria-metrics
+  tags: charts
+
+- name: FluxCD Bootstrap
+  hosts: server
+  become: true
+  gather_facts: true
+  post_tasks:
+    - name: Perform post-install tasks
+      ansible.builtin.include_role:
+        name: flux-cd
+        tasks_from: postinstall
+  roles:
+    - flux-cd
   tags: charts

@@ -18,8 +18,7 @@
           monitor:
             enabled: true
             scrape:
-              # If `null`, default value is `victoriametrics_map.service.monitor.scrape.interval`
-              interval: null
+              interval: 30s
   run_once: true
 
 - name: Set project fact

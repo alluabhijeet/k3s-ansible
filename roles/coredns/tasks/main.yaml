@@ -4,9 +4,7 @@
     name: '{{ role }}'
     tasks_from: facts
   loop:
-    - external-dns
     - k3s
-    - victoria-metrics
     - coredns
   loop_control:
     loop_var: role

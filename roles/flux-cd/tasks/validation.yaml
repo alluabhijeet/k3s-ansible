@@ -1,0 +1,47 @@
+---
+- name: Role Facts
+  ansible.builtin.include_role:
+    name: '{{ role }}'
+    tasks_from: facts
+  loop:
+    - k3s
+    - flux-cd
+  loop_control:
+    loop_var: role
+
+- name: Role Validation
+  when: (ansible_run_tags in [(), ('all',)]) or ('flux-cd' in ansible_run_tags)
+  run_once: true
+  block:
+    - name: Validate release checksum url
+      ansible.builtin.uri:
+        url: '{{ fluxcd_project.release.checksum }}'
+        timeout: 5
+      register: fluxcd_result
+      delay: 1
+      retries: 3
+      until: fluxcd_result is not failed
+
+    - name: Validate release archive url
+      ansible.builtin.uri:
+        url: '{{ fluxcd_project.release.archive }}'
+        timeout: 5
+      register: fluxcd_result
+      delay: 1
+      retries: 3
+      until: fluxcd_result is not failed
+
+    - name: Validate Flux controllers
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_map.node.directory.bin }}/flux check
+          --namespace={{ fluxcd_vars.kubernetes.namespace }}
+          --kubeconfig={{ k3s_project.cluster.kubeconfig }}
+      register: fluxcd_result
+      delay: 1
+      retries: 3
+      until: fluxcd_result is not failed
+      changed_when: false
+      failed_when: false
+      when:
+        - inventory_hostname in k3s_map.server.hosts

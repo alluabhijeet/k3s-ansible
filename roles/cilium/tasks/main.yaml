@@ -4,10 +4,7 @@
     name: '{{ role }}'
     tasks_from: facts
   loop:
-    - cert-manager
-    - external-dns
     - k3s
-    - victoria-metrics
     - cilium
   loop_control:
     loop_var: role
@@ -167,43 +164,6 @@
             kubeconfig: '{{ k3s_project.cluster.kubeconfig }}'
             wait: true
 
-        - name: Get gateway info
-          kubernetes.core.k8s_info:
-            kind: Gateway
-            kubeconfig: '{{ k3s_project.cluster.kubeconfig }}'
-            name: '{{ cilium_vars.kubernetes.hubble.ui.gateway.service }}'
-            namespace: '{{ cilium_vars.kubernetes.namespace }}'
-            wait_timeout: 10
-            wait: true
-          register: cilium_gateway
-
-        - name: Gateway Setup
-          when:
-            - cilium_vars.kubernetes.hubble.ui.enabled is falsy
-            - externaldns_vars.cloudflare.host.domain | lower != 'disabled'
-            - cilium_gateway.resources is iterable and cilium_gateway.resources | length > 0
-          block:
-            - name: Delete gateway
-              kubernetes.core.k8s:
-                definition: "{{ lookup('ansible.builtin.template', 'gateway.j2') | from_yaml }}"
-                kubeconfig: '{{ k3s_project.cluster.kubeconfig }}'
-                state: absent
-                wait: true
-
-            - name: Delete insecure http route
-              kubernetes.core.k8s:
-                definition: "{{ lookup('ansible.builtin.template', 'http_route_insecure.j2') | from_yaml }}"
-                kubeconfig: '{{ k3s_project.cluster.kubeconfig }}'
-                state: absent
-                wait: true
-
-            - name: Delete secure http route
-              kubernetes.core.k8s:
-                definition: "{{ lookup('ansible.builtin.template', 'http_route_secure.j2') | from_yaml }}"
-                kubeconfig: '{{ k3s_project.cluster.kubeconfig }}'
-                state: absent
-                wait: true
-
         - name: Update chart setup fact
           ansible.builtin.set_fact:
             cilium_setup: false
@@ -225,25 +185,3 @@
           retries: 3
           until: cilium_result is not failed
 
-        - name: Gateway Setup
-          when:
-            - cilium_vars.kubernetes.hubble.ui.enabled is truthy
-            - externaldns_vars.cloudflare.host.domain | lower != 'disabled'
-          block:
-            - name: Create gateway
-              kubernetes.core.k8s:
-                definition: "{{ lookup('ansible.builtin.template', 'gateway.j2') | from_yaml }}"
-                kubeconfig: '{{ k3s_project.cluster.kubeconfig }}'
-                wait: true
-
-            - name: Create insecure http route
-              kubernetes.core.k8s:
-                definition: "{{ lookup('ansible.builtin.template', 'http_route_insecure.j2') | from_yaml }}"
-                kubeconfig: '{{ k3s_project.cluster.kubeconfig }}'
-                wait: true
-
-            - name: Create secure http route
-              kubernetes.core.k8s:
-                definition: "{{ lookup('ansible.builtin.template', 'http_route_secure.j2') | from_yaml }}"
-                kubeconfig: '{{ k3s_project.cluster.kubeconfig }}'
-                wait: true

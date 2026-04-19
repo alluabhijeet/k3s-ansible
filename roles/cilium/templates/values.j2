@@ -105,12 +105,8 @@ envoy:
   prometheus:
     serviceMonitor:
       enabled: true
-{% if cilium_map.metrics.service.monitor.scrape.interval is falsy %}
-      interval: {{ victoriametrics_map.service.monitor.scrape.interval }}
-{% else %}
       interval: {{ cilium_map.metrics.service.monitor.scrape.interval }}
-{% endif %}
-      namespace: {{ victoriametrics_vars.kubernetes.namespace }}
+      namespace: kube-system
 {% endif %}
 hubble:
   metrics:
@@ -121,12 +117,8 @@ hubble:
 {% if cilium_map.metrics.service.monitor.enabled is truthy %}
     serviceMonitor:
       enabled: true
-{% if cilium_map.metrics.service.monitor.scrape.interval is falsy %}
-      interval: {{ victoriametrics_map.service.monitor.scrape.interval }}
-{% else %}
       interval: {{ cilium_map.metrics.service.monitor.scrape.interval }}
-{% endif %}
-      namespace: {{ victoriametrics_vars.kubernetes.namespace }}
+      namespace: kube-system
 {% endif %}
   peerService:
     clusterDomain: {{ k3s_vars.cluster.domain }}
@@ -140,12 +132,8 @@ hubble:
       enabled: true
       serviceMonitor:
         enabled: true
-{% if cilium_map.metrics.service.monitor.scrape.interval is falsy %}
-        interval: {{ victoriametrics_map.service.monitor.scrape.interval }}
-{% else %}
         interval: {{ cilium_map.metrics.service.monitor.scrape.interval }}
-{% endif %}
-        namespace: {{ victoriametrics_vars.kubernetes.namespace }}
+        namespace: kube-system
 {% endif %}
     replicas: {{ cilium_vars.kubernetes.hubble.relay.replicas }}
     resources:
@@ -188,37 +176,20 @@ hubble:
     replicas: {{ cilium_vars.kubernetes.hubble.ui.replicas }}
     rollOutPods: true
 {% endif %}
-{% if cilium_vars.kubernetes.hubble.tls.auto.method | lower == 'certmanager' %}
-  tls:
-    auto:
-      certManagerIssuerRef:
-        group: cert-manager.io
-        kind: ClusterIssuer
-        name: {{ cilium_map.ca.hubble.cluster.issuer.name }}
-      method: {{ cilium_vars.kubernetes.hubble.tls.auto.method }}
-{% endif %}
 {% if cilium_map.metrics.service.monitor.enabled is truthy %}
 operator:
   prometheus:
     enabled: true
     serviceMonitor:
       enabled: true
-{% if cilium_map.metrics.service.monitor.scrape.interval is falsy %}
-      interval: {{ victoriametrics_map.service.monitor.scrape.interval }}
-{% else %}
       interval: {{ cilium_map.metrics.service.monitor.scrape.interval }}
-{% endif %}
-      namespace: {{ victoriametrics_vars.kubernetes.namespace }}
+      namespace: kube-system
 prometheus:
   enabled: true
   serviceMonitor:
     enabled: true
-{% if cilium_map.metrics.service.monitor.scrape.interval is falsy %}
-    interval: {{ victoriametrics_map.service.monitor.scrape.interval }}
-{% else %}
     interval: {{ cilium_map.metrics.service.monitor.scrape.interval }}
-{% endif %}
-    namespace: {{ victoriametrics_vars.kubernetes.namespace }}
+    namespace: kube-system
 {% endif %}
 {% else %}
 autoDirectNodeRoutes: true

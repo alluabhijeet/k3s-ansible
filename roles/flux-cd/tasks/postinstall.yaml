@@ -1,0 +1,16 @@
+---
+- name: Role Post-Install
+  when: inventory_hostname in k3s_map.server.hosts
+  run_once: true
+  block:
+    - name: Verify Flux controllers readiness
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_map.node.directory.bin }}/flux check
+          --namespace={{ fluxcd_vars.kubernetes.namespace }}
+          --kubeconfig={{ k3s_project.cluster.kubeconfig }}
+      register: fluxcd_result
+      delay: 5
+      retries: 12
+      until: fluxcd_result is not failed
+      changed_when: false

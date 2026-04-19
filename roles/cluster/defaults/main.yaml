@@ -2,7 +2,7 @@
 cluster_vars:
   device:
     # -- See [documentation](https://axivo.com/k3s-cluster/tutorials/handbook/server/#storage-devices), for details
-    enabled: true
+    enabled: false
     # -- See [documentation](https://axivo.com/k3s-cluster/tutorials/handbook/server/#deviceid), for details
     id: '2:2'
     # -- See [documentation](https://axivo.com/k3s-cluster/tutorials/handbook/server/#devicename), for details

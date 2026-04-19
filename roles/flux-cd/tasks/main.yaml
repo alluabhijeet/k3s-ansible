@@ -1,0 +1,109 @@
+---
+- name: Role Facts
+  ansible.builtin.include_role:
+    name: '{{ role }}'
+    tasks_from: facts
+  loop:
+    - k3s
+    - flux-cd
+  loop_control:
+    loop_var: role
+
+- name: Role Provisioning
+  when: inventory_hostname in k3s_map.server.hosts
+  block:
+    - name: Validate service state
+      ansible.builtin.wait_for:
+        port: '{{ k3s_vars.server.api.port }}'
+        timeout: 30
+      any_errors_fatal: true
+
+    - name: Set checksums fact
+      ansible.builtin.uri:
+        url: '{{ fluxcd_project.release.checksum }}'
+        return_content: true
+      register: fluxcd_checksums
+      delay: 1
+      retries: 3
+      until: fluxcd_checksums is not failed
+      check_mode: false
+      run_once: true
+
+    - name: Set sha256 checksum fact
+      ansible.builtin.set_fact:
+        fluxcd_sha256_checksum: "{{ item.split('  ')[0] }}"
+      loop: "{{ fluxcd_checksums.content.split('\n') }}"
+      when: item is search(fluxcd_map.release.archive + '$')
+      run_once: true
+
+    - name: Download flux binary archive
+      ansible.builtin.get_url:
+        url: '{{ fluxcd_project.release.archive }}'
+        checksum: 'sha256:{{ fluxcd_sha256_checksum }}'
+        dest: '/tmp/{{ fluxcd_map.release.archive }}'
+        mode: '644'
+      register: fluxcd_result
+      delay: 1
+      retries: 3
+      until: fluxcd_result is not failed
+
+    - name: Install flux binary
+      ansible.builtin.unarchive:
+        src: '/tmp/{{ fluxcd_map.release.archive }}'
+        dest: '{{ k3s_map.node.directory.bin }}'
+        remote_src: true
+        include:
+          - flux
+        owner: root
+        group: root
+        mode: '755'
+      run_once: true
+
+    - name: Install Flux controllers
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_map.node.directory.bin }}/flux install
+          --namespace={{ fluxcd_vars.kubernetes.namespace }}
+          --components-extra={{ fluxcd_vars.kubernetes.components_extra | join(',') }}
+          --kubeconfig={{ k3s_project.cluster.kubeconfig }}
+      register: fluxcd_result
+      run_once: true
+      changed_when: "'unchanged' not in fluxcd_result.stdout"
+      when: fluxcd_vars.git.url | length == 0
+
+    - name: Bootstrap Flux via SSH
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_map.node.directory.bin }}/flux bootstrap git
+          --url={{ fluxcd_vars.git.url }}
+          --branch={{ fluxcd_vars.git.branch }}
+          --path={{ fluxcd_vars.git.path }}
+          --namespace={{ fluxcd_vars.kubernetes.namespace }}
+          --kubeconfig={{ k3s_project.cluster.kubeconfig }}
+          {{ '--private-key-file=' + fluxcd_vars.git.ssh.private_key_file if fluxcd_vars.git.ssh.private_key_file | length > 0 else '' }}
+      register: fluxcd_result
+      run_once: true
+      changed_when: true
+      when:
+        - fluxcd_vars.git.url | length > 0
+        - fluxcd_vars.git.url is search('^ssh://')
+
+    - name: Bootstrap Flux via HTTPS
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_map.node.directory.bin }}/flux bootstrap git
+          --url={{ fluxcd_vars.git.url }}
+          --branch={{ fluxcd_vars.git.branch }}
+          --path={{ fluxcd_vars.git.path }}
+          --namespace={{ fluxcd_vars.kubernetes.namespace }}
+          --kubeconfig={{ k3s_project.cluster.kubeconfig }}
+          --username={{ fluxcd_vars.git.https.username }}
+          --password={{ fluxcd_vars.git.https.password }}
+          --token-auth=true
+      register: fluxcd_result
+      run_once: true
+      changed_when: true
+      when:
+        - fluxcd_vars.git.url | length > 0
+        - fluxcd_vars.git.url is search('^https://')
+      no_log: true

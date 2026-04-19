@@ -4,8 +4,7 @@
   become: true
   gather_facts: true
   serial:
-    - 3
-    - 5
+    - 2
   post_tasks:
     - name: Remove archived journal files
       ansible.builtin.command:
@@ -23,16 +22,9 @@
       loop:
         - cluster
         - k3s
-        - argo-cd
-        - cert-manager
+        - flux-cd
         - cilium
         - coredns
-        - external-dns
-        - kured
-        - longhorn
-        - metrics-server
-        - victoria-logs
-        - victoria-metrics
         - helm
       loop_control:
         loop_var: reset

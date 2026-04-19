@@ -1,0 +1,25 @@
+---
+- name: Role Facts
+  ansible.builtin.import_role:
+    name: k3s
+    tasks_from: facts
+
+- name: Role Reset
+  when: inventory_hostname in k3s_map.server.hosts
+  block:
+    - name: Uninstall Flux controllers
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_map.node.directory.bin }}/flux uninstall
+          --namespace={{ fluxcd_vars.kubernetes.namespace }}
+          --kubeconfig={{ k3s_project.cluster.kubeconfig }}
+          --silent
+      register: fluxcd_result
+      run_once: true
+      changed_when: fluxcd_result.rc == 0
+      failed_when: false
+
+    - name: Remove flux binary
+      ansible.builtin.file:
+        path: '{{ k3s_map.node.directory.bin }}/flux'
+        state: absent

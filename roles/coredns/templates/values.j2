@@ -22,12 +22,8 @@ podDisruptionBudget:
 prometheus:
   monitor:
     enabled: true
-{% if coredns_map.metrics.service.monitor.scrape.interval is falsy %}
-    interval: {{ victoriametrics_map.service.monitor.scrape.interval }}
-{% else %}
     interval: {{ coredns_map.metrics.service.monitor.scrape.interval }}
-{% endif %}
-    namespace: {{ victoriametrics_vars.kubernetes.namespace }}
+    namespace: kube-system
   service:
     enabled: true
 {% endif %}

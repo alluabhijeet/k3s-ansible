@@ -5,7 +5,7 @@ k3s_vars:
       tainted: true
     domain: cluster.local
     gitops:
-      provider: argo-cd
+      provider: flux
     kubeconfig:
       local: true
       # -- Local `/.kube` directory path

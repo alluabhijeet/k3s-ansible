@@ -15,7 +15,7 @@
           {% endif %}
             - valid tags: {{ global_map.tags.role | join(', ') }}
       when:
-        - ansible_run_tags not in [(), ('all',)]
+        - ansible_run_tags not in [[], ['all'], (), ('all',)]
         - ansible_run_tags | difference(global_map.tags.role) | length > 0
 
     - name: Validate version
