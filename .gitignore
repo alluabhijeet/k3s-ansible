@@ -1,18 +1,8 @@
-# Ansible
-.ansible
-ansible.log
-validation.log
-
-# Claude
-.claude/
-
-# MacOS
-**/.DS_Store
-.AppleDouble
-.LSOverride
-._*
-
-# Node.js
-node_modules/
-package.json
-package-lock.json
+venv
+.venv
+.vscode
+.vagrant
+inventory.yml
+playbook/debug.yml
+.ansible/
+PR_DESCRIPTION.md
