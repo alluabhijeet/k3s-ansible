@@ -1,20 +1,5 @@
 ---
-- name: Set map fact
+- name: Set variables fact
   ansible.builtin.set_fact:
-    fluxcd_map:
-      release:
-        # -- Flux release archive uses version without leading 'v'
-        archive: "flux_{{ fluxcd_vars.release.version[1:] }}_linux_arm64.tar.gz"
-        checksum: "flux_{{ fluxcd_vars.release.version[1:] }}_checksums.txt"
-        url: >-
-          https://github.com/{{ fluxcd_vars.release.repository.org }}/{{
-            fluxcd_vars.release.repository.name }}/releases/download/{{ fluxcd_vars.release.version }}
-  run_once: true
-
-- name: Set project fact
-  ansible.builtin.set_fact:
-    fluxcd_project:
-      release:
-        archive: "{{ fluxcd_map.release.url }}/{{ fluxcd_map.release.archive }}"
-        checksum: "{{ fluxcd_map.release.url }}/{{ fluxcd_map.release.checksum }}"
+    fluxcd_vars: '{{ fluxcd_vars }}'
   run_once: true

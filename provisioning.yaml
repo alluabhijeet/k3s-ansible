@@ -85,4 +85,4 @@
         tasks_from: postinstall
   roles:
     - flux-cd
-  tags: charts
+  tags: flux-cd

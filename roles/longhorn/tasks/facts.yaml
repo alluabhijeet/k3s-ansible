@@ -28,7 +28,7 @@
       metrics:
         service:
           monitor:
-            enabled: true
+            enabled: false
             scrape:
               # If `null`, default value is `victoriametrics_map.service.monitor.scrape.interval`
               interval: null

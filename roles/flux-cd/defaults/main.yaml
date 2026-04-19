@@ -1,32 +1,12 @@
 ---
 fluxcd_vars:
   kubernetes:
-    # -- Additional controllers to install alongside core components
-    components_extra:
-      - image-reflector-controller
-      - image-automation-controller
-    # -- Namespace for Flux installation
     namespace: flux-system
   git:
-    # -- Git repository URL, e.g., ssh://git@github.com/user/k3s-gitops.git or https://github.com/user/k3s-gitops
-    # -- Leave empty to install controllers only; run `flux bootstrap git` manually afterward
-    url: ""
-    branch: main
-    # -- Path within the repository where cluster manifests are stored
+    branch: master
     path: clusters/production
-    ssh:
-      # -- Path to SSH private key on the control plane node, used when url is ssh://
-      # -- Leave empty to let Flux generate and display a deploy key
-      private_key_file: ""
-    https:
-      # -- (string) HTTPS username, set at global level
-      # @default -- Set value into [all.yaml](../../inventory/cluster/group_vars/all.yaml) `credentials` collection
-      username: ""
-      # -- (string) HTTPS password or personal access token, set at global level
-      # @default -- Set value into [all.yaml](../../inventory/cluster/group_vars/all.yaml) `credentials` collection
-      password: ""
+  github:
+    # -- Set to true for personal repositories, false for organization repositories
+    personal: true
   release:
-    repository:
-      name: flux2
-      org: fluxcd
-    version: v2.4.0
+    version: 2.8.5

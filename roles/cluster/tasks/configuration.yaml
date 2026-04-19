@@ -131,6 +131,13 @@
       notify: Reboot
       when: cluster_host_fqdn.stdout != cluster_host['fqdn']
 
+    - name: Set cluster hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ hostvars[item]['ansible_facts']['default_ipv4']['address'] }} {{ item }}"
+      loop: "{{ groups['cluster'] }}"
+      when: item != inventory_hostname
+
     - name: Set root full name
       ansible.builtin.command:
         cmd: chfn -f "{{ cluster_host['name'] }}" root
