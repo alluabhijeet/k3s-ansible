@@ -32,6 +32,8 @@ gateway:
   className: cilium
   hostname: terminus.noty.cc
   clusterIssuer: cert-manager-cluster-issuer
+  http:
+    direct: false
 
 resources:
   terminus:
