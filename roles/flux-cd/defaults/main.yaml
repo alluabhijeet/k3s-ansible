@@ -10,3 +10,7 @@ fluxcd_vars:
     personal: true
   release:
     version: 2.8.5
+  sops:
+    # -- age private key is written here during provisioning then stored as a K8s secret
+    key_path: /tmp/flux-sops-age.agekey
+    secret_name: sops-age

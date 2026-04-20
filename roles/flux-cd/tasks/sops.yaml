@@ -1,0 +1,72 @@
+---
+- name: SOPS Configuration
+  when: inventory_hostname in k3s_map.server.hosts
+  run_once: true
+  block:
+    - name: Install age
+      ansible.builtin.apt:
+        name: age
+        state: present
+        update_cache: true
+
+    - name: Check for existing sops-age secret
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_map.node.directory.bin }}/kubectl get secret
+          {{ fluxcd_vars.sops.secret_name }}
+          --namespace={{ fluxcd_vars.kubernetes.namespace }}
+          --ignore-not-found
+      environment:
+        KUBECONFIG: '{{ k3s_project.cluster.kubeconfig }}'
+      register: fluxcd_sops_existing
+      changed_when: false
+
+    - name: Generate age key pair
+      ansible.builtin.command:
+        cmd: age-keygen -o {{ fluxcd_vars.sops.key_path }}
+      register: fluxcd_sops_keygen
+      changed_when: true
+      when: fluxcd_sops_existing.stdout | length == 0
+
+    - name: Parse age public key
+      ansible.builtin.set_fact:
+        fluxcd_sops_public_key: >-
+          {{ fluxcd_sops_keygen.stderr
+             | regex_search('Public key: (age1[a-z0-9]+)', '\1')
+             | first }}
+      when: fluxcd_sops_existing.stdout | length == 0
+
+    - name: Ensure flux-system namespace exists
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_map.node.directory.bin }}/kubectl create namespace
+          {{ fluxcd_vars.kubernetes.namespace }} --dry-run=client -o yaml
+          | {{ k3s_map.node.directory.bin }}/kubectl apply -f -
+      environment:
+        KUBECONFIG: '{{ k3s_project.cluster.kubeconfig }}'
+      changed_when: false
+
+    - name: Create sops-age Kubernetes secret
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_map.node.directory.bin }}/kubectl create secret generic
+          {{ fluxcd_vars.sops.secret_name }}
+          --namespace={{ fluxcd_vars.kubernetes.namespace }}
+          --from-file=age.agekey={{ fluxcd_vars.sops.key_path }}
+      environment:
+        KUBECONFIG: '{{ k3s_project.cluster.kubeconfig }}'
+      changed_when: true
+      when: fluxcd_sops_existing.stdout | length == 0
+
+    - name: Remove age key from disk
+      ansible.builtin.file:
+        path: '{{ fluxcd_vars.sops.key_path }}'
+        state: absent
+      when: fluxcd_sops_existing.stdout | length == 0
+
+    - name: Print age public key
+      ansible.builtin.debug:
+        msg: >-
+          SOPS age public key (add to .sops.yaml):
+          {{ fluxcd_sops_public_key }}
+      when: fluxcd_sops_existing.stdout | length == 0

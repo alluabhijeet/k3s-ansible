@@ -1,0 +1,46 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "terminus.name" . }}-http
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "terminus.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: {{ include "terminus.name" . }}
+      namespace: {{ .Release.Namespace }}
+      sectionName: http
+  hostnames:
+    - {{ .Values.gateway.hostname | quote }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "terminus.name" . }}-https
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "terminus.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: {{ include "terminus.name" . }}
+      namespace: {{ .Release.Namespace }}
+      sectionName: https
+  hostnames:
+    - {{ .Values.gateway.hostname | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ include "terminus.name" . }}
+          port: 80
+{{- end }}

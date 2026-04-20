@@ -1,0 +1,13 @@
+apiVersion: v2
+name: terminus
+description: Helm chart for Terminus — TRMNL self-hosted image generation server
+type: application
+version: 0.1.0
+appVersion: "latest"
+home: https://github.com/usetrmnl/terminus
+sources:
+  - https://github.com/usetrmnl/terminus
+keywords:
+  - terminus
+  - trmnl
+  - e-ink

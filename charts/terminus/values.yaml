@@ -1,0 +1,57 @@
+image:
+  repository: ghcr.io/usetrmnl/terminus
+  tag: latest
+  pullPolicy: Always
+
+valkey:
+  image:
+    repository: valkey/valkey
+    tag: 8-alpine
+    pullPolicy: IfNotPresent
+
+app:
+  timezone: "America/New_York"
+  apiUri: "https://terminus.noty.cc"
+  rackAttackAllowedSubnets: "10.42.0.0/16"
+
+# CloudNativePG Cluster for in-cluster PostgreSQL
+cnpg:
+  instances: 1
+  database: terminus
+  owner: terminus
+  storage:
+    size: 5Gi
+
+# Uploads PVC
+persistence:
+  storageClass: local-path
+  size: 2Gi
+
+gateway:
+  enabled: true
+  className: cilium
+  hostname: terminus.noty.cc
+  clusterIssuer: cert-manager-cluster-issuer
+
+resources:
+  terminus:
+    requests:
+      memory: 512Mi
+      cpu: 200m
+    limits:
+      memory: 1Gi
+      cpu: 1000m
+  sidekiq:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+  valkey:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m

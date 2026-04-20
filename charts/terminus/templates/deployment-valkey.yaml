@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "terminus.name" . }}-valkey
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "terminus.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "terminus.valkey.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "terminus.valkey.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: valkey
+          image: {{ .Values.valkey.image.repository }}:{{ .Values.valkey.image.tag }}
+          imagePullPolicy: {{ .Values.valkey.image.pullPolicy }}
+          ports:
+            - name: valkey
+              containerPort: 6379
+          resources:
+            {{- toYaml .Values.resources.valkey | nindent 12 }}

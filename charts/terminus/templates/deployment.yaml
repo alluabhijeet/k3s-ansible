@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "terminus.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "terminus.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "terminus.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "terminus.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: terminus
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 2345
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/public/uploads
+          resources:
+            {{- toYaml .Values.resources.terminus | nindent 12 }}
+          env:
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "terminus.name" . }}-config
+                  key: TZ
+            - name: APP_SETUP
+              value: "true"
+            - name: API_URI
+              value: {{ .Values.app.apiUri | quote }}
+            - name: HANAMI_PORT
+              value: "2345"
+            - name: KEYVALUE_URL
+              value: redis://{{ include "terminus.name" . }}-valkey:6379
+            - name: RACK_ATTACK_ALLOWED_SUBNETS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "terminus.name" . }}-config
+                  key: RACK_ATTACK_ALLOWED_SUBNETS
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "terminus.cnpg.clusterName" . }}-app
+                  key: uri
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: terminus-secrets
+                  key: APP_SECRET
+
+        - name: sidekiq
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["bundle", "exec", "sidekiq", "-r", "./config/sidekiq.rb"]
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/public/uploads
+          resources:
+            {{- toYaml .Values.resources.sidekiq | nindent 12 }}
+          env:
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "terminus.name" . }}-config
+                  key: TZ
+            - name: API_URI
+              value: {{ .Values.app.apiUri | quote }}
+            - name: KEYVALUE_URL
+              value: redis://{{ include "terminus.name" . }}-valkey:6379
+            - name: RACK_ATTACK_ALLOWED_SUBNETS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "terminus.name" . }}-config
+                  key: RACK_ATTACK_ALLOWED_SUBNETS
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "terminus.cnpg.clusterName" . }}-app
+                  key: uri
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: terminus-secrets
+                  key: APP_SECRET
+
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: {{ include "terminus.name" . }}-uploads

@@ -1,0 +1,25 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: terminus
+  namespace: flux-system
+spec:
+  targetNamespace: terminus
+  createNamespace: true
+  chart:
+    spec:
+      chart: ./charts/terminus
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+      reconcileStrategy: Revision
+  interval: 10m
+  timeout: 5m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
