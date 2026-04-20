@@ -21,6 +21,12 @@
       register: fluxcd_sops_existing
       changed_when: false
 
+    - name: Remove stale age key if present
+      ansible.builtin.file:
+        path: '{{ fluxcd_vars.sops.key_path }}'
+        state: absent
+      when: fluxcd_sops_existing.stdout | length == 0
+
     - name: Generate age key pair
       ansible.builtin.command:
         cmd: age-keygen -o {{ fluxcd_vars.sops.key_path }}
@@ -37,7 +43,7 @@
       when: fluxcd_sops_existing.stdout | length == 0
 
     - name: Ensure flux-system namespace exists
-      ansible.builtin.command:
+      ansible.builtin.shell:
         cmd: >-
           {{ k3s_map.node.directory.bin }}/kubectl create namespace
           {{ fluxcd_vars.kubernetes.namespace }} --dry-run=client -o yaml

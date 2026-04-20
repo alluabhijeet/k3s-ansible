@@ -1,6 +1,4 @@
 creation_rules:
   - path_regex: apps/production/.*\.sops\.yaml$
     encrypted_regex: ^(data|stringData)$
-    # Replace with the public key printed by the sops Ansible task on first provisioning:
-    #   ansible-playbook provisioning.yaml --tags flux-cd
-    age: age1REPLACEME
+    age: age1nktvza935ny7k74ucsczdeps40qnuy0tt8znd2fu8ztz29xr6vpq2gppna
