@@ -23,7 +23,7 @@ patches:
             storage:
               size: 5Gi
           persistence:
-            storageClass: local-path
+            storageClass: longhorn
             size: 2Gi
           gateway:
             enabled: true
