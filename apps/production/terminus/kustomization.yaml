@@ -28,5 +28,7 @@ patches:
           gateway:
             enabled: true
             hostname: terminus.noty.cc
+            tls:
+              enabled: false
             http:
               direct: true

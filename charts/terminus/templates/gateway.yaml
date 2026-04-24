@@ -6,8 +6,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "terminus.labels" . | nindent 4 }}
+  {{- if .Values.gateway.tls.enabled }}
   annotations:
     cert-manager.io/cluster-issuer: {{ .Values.gateway.clusterIssuer }}
+  {{- end }}
 spec:
   gatewayClassName: {{ .Values.gateway.className }}
   listeners:
@@ -20,6 +22,7 @@ spec:
       allowedRoutes:
         namespaces:
           from: Same
+    {{- if .Values.gateway.tls.enabled }}
     - name: https
       hostname: {{ .Values.gateway.hostname | quote }}
       port: 443
@@ -32,4 +35,5 @@ spec:
       allowedRoutes:
         namespaces:
           from: Same
+    {{- end }}
 {{- end }}
